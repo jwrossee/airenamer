@@ -2,7 +2,7 @@ import { Base64 } from "https://deno.land/x/bb64@1.1.0/mod.ts";
 
 export async function getkeywords(image: string): Promise<string[]> {
   const body = {
-    "model": "llava:13b",
+    "model": "llava",
     "format": "json",
     "prompt": `Describe the image as a collection of keywords. Output in JSON format. Use the following schema: { filename: string, keywords: string[] }`,
     "images": [image],
@@ -24,9 +24,20 @@ export async function getkeywords(image: string): Promise<string[]> {
 }
 
 function createFileName(keywords: string[], fileext: string): string {
-  const fileparts = keywords.map(k => k.replace(/ /g, "_"));
-  const newfilename = fileparts.join("-") + "." + fileext;
-  return newfilename;
+  const maxFilenameLength = 255;
+  const extension = "." + fileext;
+  
+  // Calculate the maximum allowed length for the main part of the filename
+  const maxMainLength = maxFilenameLength - extension.length;
+
+  let newfilename = keywords.map(k => k.replace(/ /g, "_")).join("-");
+
+  // Truncate the filename if it exceeds the maximum length
+  if (newfilename.length > maxMainLength) {
+    newfilename = newfilename.substring(0, maxMainLength);
+  }
+
+  return newfilename + extension;
 }
 
 if (import.meta.main) {
